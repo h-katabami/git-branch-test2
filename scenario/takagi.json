@@ -1,0 +1,460 @@
+[
+  {
+    "id": "start",
+    "status_checkpoint": "冒頭切断",
+    "action": "Api",
+    "method": "custom:lambda",
+    "name": "TakagiTwilioCustomParts",
+    "branch": {
+      "Next": "冒頭ガイダンス",
+      "channel-limit": "channel-limit",
+      "fail": "fail"
+    }
+  },
+  {
+    "id": "channel-limit",
+    "status_checkpoint": "ビジー切断",
+    "action": "Api",
+    "method": "custom:lambda",
+    "name": "TakagiTwilioCustomParts",
+    "branch": {
+      "fail": "fail"
+    }
+  },
+  {
+    "id": "冒頭ガイダンス",
+    "action": "Record",
+    "branch": {
+      "Next": "お客様ナンバー"
+    },
+    "text": "<vtml_pause time=\"1100\"/>ここからは<vtml_pause time=\"100\"/>自動音声サービスで<vtml_pause time=\"100\"/>次回<vtml_break level=\"0\"/>交換予定日の変更を<vtml_pause time=\"100\"/>受け付けいたします。ガイダンスに従って<vtml_pause time=\"200\"/>ピッという電子音の後に<vtml_pause time=\"100\"/>お話しください。"
+  },
+  {
+    "id": "お客様ナンバー",
+    "status_checkpoint": "切断(お客様ナンバー)",
+    "action": "Grammer",
+    "grammer": "takagi/cust_cd",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "branch": {
+      "Next": "データ照会1",
+      "NO": "電話番号（データ不明）",
+      "Error": "電話番号（データ不明）"
+    },
+    "text": "まずはじめに<vtml_pause time=\"200\"/>ご登録確認のため<vtml_pause time=\"200\"/>お客様ナンバーをお話しください。\nわからない方は「わからない」とお話しください。",
+    "retry_text": "音声を認識できませんでした。もう一度、お客様ナンバーを<vtml_pause time=\"100\"/>お話しください。お客様ナンバーは<vtml_pause time=\"100\"/>納品書兼<vtml_pause time=\"100\"/>請求書を開いた右側のページに<vtml_pause time=\"100\"/>記載がございます。\nわからない方は<vtml_pause time=\"100\"/>「わからない」と<vtml_pause time=\"100\"/>お話しください。",
+    "retry_over_text": "音声を認識できませんでした。"
+  },
+  {
+    "id": "データ照会1",
+    "action": "Api",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "YES": "電話番号（データ照会あり）",
+      "NO": "電話番号（データ不明）",
+      "fail": "電話番号（データ不明）"
+    }
+  },
+  {
+    "id": "電話番号（データ不明）",
+    "status_checkpoint": "切断(電話番号2)",
+    "action": "Grammer",
+    "grammer": "takagi/Phonenumber",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "branch": {
+      "Next": "データ照会2",
+      "NO": "営業時間照会1",
+      "Error": "営業時間照会1"
+    },
+    "text": "それでは、ご登録のお電話番号を<vtml_pause time=\"100\"/>お話しください。",
+    "retry_text": "音声を認識できませんでした。もう一度、ご登録のお電話番号を<vtml_pause time=\"100\"/>お話しください。"
+  },
+  {
+    "id": "データ照会2",
+    "action": "Api",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "YES": "郵便番号（データ不明）",
+      "NO": "電話番号（データ不明2回目）",
+      "fail": "電話番号（データ不明2回目）"
+    }
+  },
+  {
+    "id": "電話番号（データ照会あり）",
+    "status_checkpoint": "切断(電話番号1)",
+    "action": "Grammer",
+    "grammer": "takagi/Phonenumber",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "branch": {
+      "Next": "郵便番号（データ照会あり）",
+      "Error": "営業時間照会1"
+    },
+    "text": "続いて、ご登録のお電話番号を<vtml_pause time=\"100\"/>お話しください。",
+    "retry_text": "音声を認識できませんでした。もう一度、ご登録のお電話番号を<vtml_pause time=\"100\"/>お話しください。"
+  },
+  {
+    "id": "電話番号（データ不明2回目）",
+    "action": "Grammer",
+    "grammer": "takagi/Phonenumber",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "branch": {
+      "Next": "データ照会7",
+      "NO": "営業時間照会1",
+      "Error": "営業時間照会1"
+    },
+    "text": "<vtml_phoneme alphabet=\"x-pentax\" ph=\"オハナシイタダイタ[普通名詞]\">お話いただいた</vtml_phoneme>電話番号は<vtml_pause time=\"100\"/>登録に該当がございませんでした。\nその<vtml_phoneme alphabet=\"x-pentax\" ph=\"ホカ[普通名詞]\">他</vtml_phoneme>に<vtml_pause time=\"100\"/>お心あたりのある電話番号を<vtml_pause time=\"100\"/>お話ください。",
+    "retry_text": "音声を認識できませんでした。もう一度、ご登録のお電話番号を<vtml_pause time=\"100\"/>お話しください。",
+    "retry_over_text": ""
+  },
+  {
+    "id": "データ照会7",
+    "action": "Api",
+    "method": "custom:lambda",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "YES": "郵便番号（データ不明）",
+      "NO": "営業時間照会2",
+      "Error": "営業時間照会2"
+    }
+  },
+  {
+    "id": "郵便番号（データ照会あり）",
+    "status_checkpoint": "切断(郵便番号1)",
+    "action": "Grammer",
+    "grammer": "takagi/Zipcode",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "dev:post_time": 3000,
+    "branch": {
+      "Next": "データ照会3",
+      "Error": "営業時間照会1"
+    },
+    "text": "続いて、ご登録住所の郵便番号を<vtml_pause time=\"100\"/>お話しください。",
+    "retry_text": "音声を認識できませんでした。もう一度、ご登録の郵便番号を<vtml_pause time=\"100\"/>お話しください。"
+  },
+  {
+    "id": "郵便番号（データ不明）",
+    "status_checkpoint": "切断(郵便番号2)",
+    "action": "Grammer",
+    "grammer": "takagi/Zipcode",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "dev:post_time": 3000,
+    "branch": {
+      "Next": "お名前2",
+      "Error": "営業時間照会1"
+    },
+    "text": "続いて、ご登録の郵便番号を<vtml_pause time=\"100\"/>お話しください。",
+    "retry_text": "音声を認識できませんでした。もう一度、ご登録の郵便番号を<vtml_pause time=\"100\"/>お話しください。"
+  },
+  {
+    "id": "データ照会3",
+    "action": "Api",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "YES": "データ照会6",
+      "NO": "お名前1",
+      "fail": "営業時間照会2"
+    }
+  },
+  {
+    "id": "お名前2",
+    "status_checkpoint": "切断(名前2)",
+    "action": "Grammer",
+    "grammer": "takagi/Name",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "branch": {
+      "Next": "データ照会4",
+      "Error": "営業時間照会1"
+    },
+    "text": "続いて、ご契約者様のお名前を<vtml_pause time=\"100\"/>お話しください。",
+    "retry_text": "音声を認識できませんでした。もう一度、ご契約者様のお名前を<vtml_pause time=\"100\"/>お話しください。"
+  },
+  {
+    "id": "お名前1",
+    "status_checkpoint": "切断(名前1)",
+    "action": "Grammer",
+    "grammer": "takagi/Name",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "branch": {
+      "Next": "データ照会5",
+      "Error": "営業時間照会1"
+    },
+    "text": "続いて、ご契約者様のお名前を<vtml_pause time=\"100\"/>お話しください。",
+    "retry_text": "音声を認識できませんでした。もう一度、ご契約者様のお名前を<vtml_pause time=\"100\"/>お話しください。"
+  },
+  {
+    "id": "データ照会4",
+    "action": "Api",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "YES": "データ照会6",
+      "fail": "営業時間照会2"
+    }
+  },
+  {
+    "id": "データ照会5",
+    "action": "Api",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "YES": "データ照会6",
+      "fail": "営業時間照会2"
+    }
+  },
+  {
+    "id": "営業時間照会2",
+    "action": "Api",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "NO": "転送2",
+      "fail": "切電2"
+    }
+  },
+  {
+    "id": "データ照会6",
+    "action": "Api",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "YES": "交換希望日ループオーバー",
+      "NO": "データ照会後転送",
+      "fail": "データ照会後切電"
+    }
+  },
+  {
+    "id": "切電2",
+    "status_checkpoint": "特定NG時間外",
+    "action": "LineOff",
+    "text": "\"<vtml_phoneme alphabet=\"x-pentax\" ph=\"オハナシイタダイタ[普通名詞]\">お話いただいた</vtml_phoneme><vtml_phoneme alphabet=\"x-pentax\" ph=\"ナイヨオデ[普通名詞]\">内容で</vtml_phoneme><vtml_pause time=\"100\"/>登録の確認ができませんでした。\n恐れ入りますが、現在<vtml_pause time=\"100\"/>営業時間外のため<vtml_pause time=\"100\"/>再度おかけ直しください。\nまた、次回ご連絡いただく<vtml_break level=\"0\"/>際には、納品書兼<vtml_pause time=\"100\"/>請求書に記載のある<vtml_pause time=\"100\"/>お客様ナンバーや<vtml_pause time=\"100\"/>ご契約情報を確認の上、ご連絡いただきますよう<vtml_pause time=\"100\"/>お願いいたします。お電話ありがとうございました。\""
+  },
+  {
+    "id": "転送2",
+    "status_checkpoint": "特定NG時間内",
+    "action": "OpTransfer",
+    "number": "+81367726271",
+    "branch": {
+      "Next": "OP転送-不在"
+    },
+    "text": "\"<vtml_phoneme alphabet=\"x-pentax\" ph=\"オハナシイタダイタ[普通名詞]\">お話いただいた</vtml_phoneme><vtml_phoneme alphabet=\"x-pentax\" ph=\"ナイヨオデ[普通名詞]\">内容で</vtml_phoneme><vtml_pause time=\"100\"/>登録の確認ができませんでした。\nここから先は<vtml_pause time=\"100\"/>担当者へ転送いたします。\n誠に恐れ入りますが、改めて、ご用件<vtml_pause time=\"100\"/>および<vtml_pause time=\"100\"/>お客様情報を<vtml_pause time=\"100\"/>お申し出ください。\""
+  },
+  {
+    "id": "データ照会後切電",
+    "status_checkpoint": "受付NG時間外",
+    "action": "LineOff",
+    "text": "{データ照会6[guidance]}"
+  },
+  {
+    "id": "データ照会後転送",
+    "status_checkpoint": "受付NG時間内",
+    "action": "OpTransfer",
+    "number": "+81367726271",
+    "branch": {
+      "Next": "OP転送-不在"
+    },
+    "text": "{データ照会6[guidance]}"
+  },
+  {
+    "id": "交換希望日ループオーバー",
+    "status_checkpoint": "切断(交換変更日)",
+    "action": "Api",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "YES": "交換希望日",
+      "fail": "営業時間照会3"
+    }
+  },
+  {
+    "id": "交換希望日",
+    "action": "Grammer",
+    "grammer": "takagi/Date",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "branch": {
+      "Next": "交換希望日確認",
+      "Error": "営業時間照会1"
+    },
+    "text": "{交換希望日ループオーバー[guidance]}",
+    "retry_text": "音声を認識できませんでした。もう一度、次回<vtml_break level=\"0\"/>交換日のご希望の日付を<vtml_pause time=\"100\"/><vtml_speed value=\"95\">2026年4月1日</vtml_speed>というように<vtml_pause time=\"100\"/>日付のみお話しください。"
+  },
+  {
+    "id": "交換希望日確認",
+    "action": "Api",
+    "name": "TwilioCustomParts-Takagi",
+    "method": "custom:lambda",
+    "branch": {
+      "Next": "交換希望日復唱確認"
+    }
+  },
+  {
+    "id": "営業時間照会3",
+    "action": "Api",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "Next": "転送3",
+      "fail": "切電3"
+    }
+  },
+  {
+    "id": "営業時間照会1",
+    "action": "Api",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "NO": "転送1",
+      "fail": "切電1"
+    }
+  },
+  {
+    "id": "転送3",
+    "action": "OpTransfer",
+    "number": "+81367726271",
+    "status_checkpoint": "希望日確認NG時間内",
+    "branch": {
+      "Next": "OP転送-不在"
+    },
+    "text": "{営業時間照会3[guidance]}"
+  },
+  {
+    "id": "交換希望日復唱確認",
+    "action": "Grammer",
+    "grammer": "takagi/YesNo",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "branch": {
+      "YES": "データ照会8",
+      "NO": "交換希望日ループオーバー",
+      "Error": "エンディング"
+    },
+    "text": "ご希望の次回交換予定日は<vtml_pause time=\"100\"/>{交換希望日確認[交換希望日]}で<vtml_pause time=\"100\"/>よろしいでしょうか。「はい」か<vtml_pause time=\"100\"/>「いいえ」で<vtml_pause time=\"100\"/>お話しください。",
+    "retry_text": "音声を認識できませんでした。ご希望の次回交換予定日は<vtml_pause time=\"100\"/>{交換希望日確認[交換希望日]}で<vtml_pause time=\"100\"/>よろしいでしょうか。「はい」か<vtml_pause time=\"100\"/>「いいえ」で<vtml_pause time=\"100\"/>お話しください。",
+    "retry_over_text": "\"音声を認識できませんでした。\nそのため、次回交換予定日を<vtml_pause time=\"100\"/><vtml_phoneme alphabet=\"x-pentax\" ph=\"オハナシ[普通名詞]\">お話</vtml_phoneme><vtml_phoneme alphabet=\"x-pentax\" ph=\"イタダイタ[普通名詞]\">いただいた</vtml_phoneme><vtml_pause time=\"100\"/>{交換希望日確認[交換希望日]}に<vtml_pause time=\"100\"/>変更いたします。\nご希望の日付が異なる場合は、改めて<vtml_pause time=\"100\"/>手続きをお願いいたします。\""
+  },
+  {
+    "id": "切電3",
+    "status_checkpoint": "希望日確認NG時間外",
+    "action": "LineOff",
+    "text": "{営業時間照会3[guidance]}"
+  },
+  {
+    "id": "切電4",
+    "action": "LineOff",
+    "text": "音声を認識できませんでした。\nお手数ですが<vtml_pause time=\"200\"/>タカギホームページより<vtml_pause time=\"200\"/>会員サイトへアクセスください。\nお電話ありがとうございました。"
+  },
+  {
+    "id": "切電1",
+    "status_checkpoint": "音声認識エラー時間外",
+    "action": "LineOff",
+    "text": "音声を認識できませんでした。恐れ入りますが、現在<vtml_pause time=\"100\"/>営業時間外のため<vtml_pause time=\"100\"/>再度おかけ直しください。お電話ありがとうございました。\n"
+    },
+  {
+    "id": "転送1",
+    "status_checkpoint": "音声認識エラー時間内",
+    "action": "OpTransfer",
+    "number": "+81367726271",
+    "branch": {
+      "Next": "OP転送-不在"
+    },
+    "text": "\"音声を認識できませんでした。\nここから先は<vtml_pause time=\"100\"/>担当者へ転送いたします。誠に恐れ入りますが、改めて、ご用件<vtml_pause time=\"100\"/>および<vtml_pause time=\"100\"/>お客様情報をお申し出ください。\""
+  },
+  {
+    "id": "データ照会8",
+    "action": "Api",
+    "method": "custom:lambda",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "YES": "エンディング",
+      "NO": "交換希望日ループオーバー"
+    }
+  },
+  {
+    "id": "エンディング",
+    "status_checkpoint": "対応完了",
+    "action": "Play",
+    "branch": {
+      "Next": "チェックポイント用Api"
+    },
+    "text": "{交換希望日確認[交換希望日]}への変更を<vtml_pause time=\"100\"/>受け付けました。<vtml_phoneme alphabet=\"x-pentax\" ph=\"ジカイ/イ^コオワ[普通名詞]\">次回以降は</vtml_phoneme><vtml_pause time=\"200\"/>登録のサイクルでお届けいたします。",
+    "retry_over_text": ""
+  },
+  {
+    "id": "チェックポイント用Api",
+    "action": "Api",
+    "name": "TwilioCustomParts-Takagi",
+    "method": "custom:lambda",
+    "branch": {
+      "Next": "WEB案内"
+    }
+  },
+  {
+    "id": "OP転送-不在",
+    "action": "LineOff",
+    "text": "<vtml_speed value=\"90\">ただいま<vtml_pause time=\"100\"/>大変混みあっており、担当者へ<vtml_pause time=\"100\"/>お繋ぎできませんでした。恐れ入りますが、しばらく経ってから<vtml_pause time=\"100\"/>おかけなおしください。お電話<vtml_pause time=\"100\"/>ありがとうございました。</vtml_speed>"
+  },
+  {
+   "action": "LineOff",
+   "id": "fail",
+   "text": "システムエラーが発生しました。恐れ入りますが、時間をおいて、再度<vtml_pause time=\"100\"/>ご連絡ください。お電話<vtml_pause time=\"100\"/>ありがとうございました。"
+  },
+  {
+    "id": "SMS送信電話番号",
+    "action": "Grammer",
+    "grammer": "takagi/Phonenumber",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "dev:engine": "",
+    "branch": {
+      "Next": "SMS送信電話番号復唱",
+      "Error": "切電4"
+    },
+    "text": "{SMS送信電話番号ループオーバー[guidance]}",
+    "retry_text": "音声を認識できませんでした。もう一度、ショートメッセージを受け取ることのできる<vtml_pause time=\"100\"/>携帯電話番号を<vtml_pause time=\"100\"/>お話しください。",
+    "retry_over_text": ""
+  },
+  {
+    "id": "SMS送信電話番号ループオーバー",
+    "action": "Api",
+    "method": "custom:lambda",
+    "name": "TwilioCustomParts-Takagi",
+    "branch": {
+      "YES": "SMS送信電話番号",
+      "fail": "SMS送信ループオーバー"
+    }
+  },
+  {
+    "id": "SMS送信電話番号復唱",
+    "action": "Grammer",
+    "grammer": "common/YesNo",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "dev:engine": "",
+    "branch": {
+      "YES": "マイページエンディング",
+      "NO": "SMS送信電話番号ループオーバー",
+      "Error": "切電4"
+    },
+    "text": "電話番号は<vtml_pause time=\"100\"/>{SMS送信電話番号}で<vtml_pause time=\"100\"/>よろしいでしょうか。\n「はい」か<vtml_pause time=\"100\"/>「いいえ」で<vtml_pause time=\"100\"/>お話しください。",
+    "retry_text": "音声を認識できませんでした。電話番号は<vtml_pause time=\"100\"/>{SMS送信電話番号}で<vtml_pause time=\"100\"/>よろしいでしょうか。「はい」か<vtml_pause time=\"100\"/>「いいえ」で<vtml_pause time=\"100\"/>お話しください。",
+    "retry_over_text": ""
+  },
+  {
+    "id": "WEB案内",
+    "status_checkpoint": "SMS案内",
+    "action": "Grammer",
+    "grammer": "common/YesNo",
+    "dev:beep": "https://s3.amazonaws.com/voice.tactinc.jp/static/tact/1_shortened.wav",
+    "dev:engine": "",
+    "branch": {
+      "YES": "SMS送信電話番号ループオーバー",
+      "NO": "切電4",
+      "Error": "切電4"
+    },
+    "text": "なお<vtml_pause time=\"200\"/>タカギ会員サイト「ミズットタカギ」に<vtml_break level=\"0\"/>ご登録いただくと、ただいま<vtml_break level=\"0\"/>変更の受け付けを完了した<vtml_pause time=\"200\"/>次回<vtml_break level=\"0\"/>交換予定日などの<vtml_pause time=\"100\"/>契約内容の確認や<vtml_pause time=\"200\"/>変更を<vtml_pause time=\"200\"/>サイト上で行えます。ご希望のお客様には<vtml_pause time=\"200\"/>会員サイトのログイン<vtml_pause time=\"100\"/>および新規登録ページのURLを<vtml_pause time=\"100\"/>ショートメッセージで<vtml_phoneme alphabet=\"x-pentax\" ph=\"オオクリイタシ/マ^ス[普通名詞]\">お送りいたします</vtml_phoneme>。ご希望の場合は<vtml_pause time=\"200\"/>「はい」<vtml_pause time=\"400\"/>不要な場合はお電話をお切りください。",
+    "retry_text": "音声を認識できませんでした。ご希望のお客様には会員サイトのログイン<vtml_pause time=\"100\"/>および新規登録ページのURLを<vtml_pause time=\"100\"/>ショートメッセージで<vtml_phoneme alphabet=\"x-pentax\" ph=\"オオクリイタシ/マ^ス[普通名詞]\">お送りいたします</vtml_phoneme>。ご希望の場合は<vtml_pause time=\"200\"/>「はい」<vtml_pause time=\"400\"/>不要な場合はお電話をお切りください。",
+    "retry_over_text": ""
+  },
+  {
+    "id": "SMS送信ループオーバー",
+    "action": "LineOff",
+    "branch": {
+      "Next": ""
+    },
+    "text": "電話番号の確認が<vtml_pause time=\"100\"/>できませんでした。\nお手数ですが<vtml_pause time=\"200\"/>タカギホームページより<vtml_pause time=\"200\"/>会員サイトへアクセスください。\nお電話ありがとうございました。"
+  },
+  {
+    "id": "マイページエンディング",
+    "status_checkpoint": "SMS送信",
+    "action": "LineOff",
+    "text": "それでは<vtml_pause time=\"100\"/>ショートメッセージにて<vtml_pause time=\"200\"/>会員サイトのURLをお送りいたしますので、お電話を<vtml_break level=\"0\"/>お切りになってお待ちください。\nなお<vtml_pause time=\"200\"/>ただいま<vtml_break level=\"0\"/>受け付けた変更は<vtml_pause time=\"200\"/>翌日以降に反映しますので<vtml_pause time=\"200\"/>後日ご確認ください。\nお電話ありがとうございました。"
+  }
+]
