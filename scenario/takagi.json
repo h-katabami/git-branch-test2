@@ -2,7 +2,7 @@
   {
     "id": "start",
     "status_checkpoint": "冒頭切断",
-    "action": "Api",
+    "action": "Play",
     "method": "custom:lambda",
     "name": "TakagiTwilioCustomParts",
     "branch": {
